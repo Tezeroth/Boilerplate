@@ -131,14 +131,37 @@ AFRAME.registerComponent("physx-body-from-model", {
   init () {
     const details = this.data;
     // On load event callback
+    /**
+ * This component sets a physx-body attribute on the entity once its model has loaded.
+ * Used to ensure physics is applied after the model is ready.
+ */
+AFRAME.registerComponent("physx-body-from-model", {
+  schema: {
+    type: 'string',
+    default: ''
+  },
+  init () {
+    const details = this.data;
+    // On load event callback
     this.onLoad = function () {
       // Set the physx-body attribute using the given details string.
       this.setAttribute('physx-body', details);
-      // Remove this component so it doesn't re-run or interfere later.
-      this.removeAttribute('physx-body-from-model');
+      
+      // Set the attribute a second time with additional props after a short delay
+      // This fixes an issue where physics bodies sometimes don't initialize correctly
+      setTimeout(() => {
+        this.setAttribute('physx-body', details);
+
+      }, 100);
     };
     // Listen for when the underlying 3D object is set on the element.
     this.el.addEventListener('object3dset', this.onLoad);
+  },
+  remove () {
+    // Cleanup the event listener if component is removed early.
+    this.el.removeEventListener('object3dset', this.onLoad);
+  }
+});
   },
   remove () {
     // Cleanup the event listener if component is removed early.
